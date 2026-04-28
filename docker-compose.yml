@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Dịch vụ Database (SQL Server)
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "YourStrong@Password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    # Đảm bảo dữ liệu không bị mất khi tắt container
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  # Dịch vụ Backend mà bạn vừa build
+  backend:
+    image: url-shortener-backend:v1
+    build: ./UrlShortener
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Chuỗi kết nối trỏ đến service "db" ở trên
+      - ConnectionStrings__DefaultConnection=Server=db;Database=UrlShortenerDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+    depends_on:
+      - db
+
+volumes:
+  sqldata:
