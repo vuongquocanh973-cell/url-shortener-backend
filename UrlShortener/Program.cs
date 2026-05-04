@@ -50,7 +50,8 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.Migrate();
+        db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
         Console.WriteLine("Database ready!");
     }
     catch (Exception ex)
@@ -58,5 +59,4 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Database error: {ex.Message}");
     }
 }
-
 app.Run();
