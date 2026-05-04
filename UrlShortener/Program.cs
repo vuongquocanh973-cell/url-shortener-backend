@@ -9,9 +9,13 @@ builder.Services.AddControllers();
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 string connectionString;
 
-if (databaseUrl != null)
+if (databaseUrl != null && databaseUrl.StartsWith("postgresql://"))
 {
-    connectionString = databaseUrl;
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    var database = uri.AbsolutePath.TrimStart('/');
+    var password = Uri.UnescapeDataString(userInfo[1]);
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={database};Username={userInfo[0]};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 }
 else
 {
