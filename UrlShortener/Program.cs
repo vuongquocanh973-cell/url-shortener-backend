@@ -11,14 +11,14 @@ string connectionString;
 
 if (databaseUrl != null && databaseUrl.StartsWith("postgresql://"))
 {
-    
     var cleanUrl = databaseUrl.Split('?')[0];
     var uri = new Uri(cleanUrl);
     var userInfo = uri.UserInfo.Split(':');
     var database = uri.AbsolutePath.TrimStart('/');
     var password = Uri.UnescapeDataString(userInfo[1]);
+    var host = uri.Host;
     var port = uri.Port > 0 ? uri.Port : 5432;
-    connectionString = $"Host={uri.Host};Port={port};Database={database};Username={userInfo[0]};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    connectionString = $"Host={host};Port={port};Database={database};Username={userInfo[0]};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 }
 else
 {
