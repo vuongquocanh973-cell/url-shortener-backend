@@ -11,6 +11,6 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<ShortUrl>().ToTable("ShortUrls");
+        modelBuilder.Entity<ShortUrl>().ToTable("shorturls");
     }
 }
