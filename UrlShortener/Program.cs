@@ -66,8 +66,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddControllers();
 builder.Services.AddScoped<UrlShortenerService>();
 builder.Services.AddEndpointsApiExplorer();
-
-// ====== SWAGGER WITH JWT ======
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
@@ -85,6 +83,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.EnsureDeleted();
         db.Database.EnsureCreated();
         Console.WriteLine("Database ready!");
     }
