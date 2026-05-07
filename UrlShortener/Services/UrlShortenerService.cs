@@ -21,11 +21,28 @@ public class UrlShortenerService
             .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
-    public async Task<ShortUrl> CreateShortUrlAsync(string originalUrl)
+    public async Task<ShortUrl> CreateShortUrlAsync(string originalUrl, int? userId = null)
     {
+        // Validate URL
         if (!Uri.TryCreate(originalUrl, UriKind.Absolute, out _))
             throw new ArgumentException("Invalid URL format.");
 
+        // Check URL limit
+        int limit = userId.HasValue ? 6 : 2;
+        int count;
+
+        if (userId.HasValue)
+            count = await _db.ShortUrls.CountAsync(u => u.UserId == userId);
+        else
+            count = await _db.ShortUrls.CountAsync(u => u.UserId == null);
+
+        if (count >= limit)
+            throw new InvalidOperationException(
+                userId.HasValue
+                    ? "You have reached the limit of 6 URLs!"
+                    : "Guest limit reached! Login to shorten more URLs.");
+
+        // Generate unique code
         string code;
         do { code = GenerateShortCode(); }
         while (await _db.ShortUrls.AnyAsync(u => u.ShortCode == code));
@@ -33,7 +50,8 @@ public class UrlShortenerService
         var shortUrl = new ShortUrl
         {
             OriginalUrl = originalUrl,
-            ShortCode = code
+            ShortCode = code,
+            UserId = userId
         };
 
         _db.ShortUrls.Add(shortUrl);
@@ -52,8 +70,17 @@ public class UrlShortenerService
         return entry;
     }
 
-    public async Task<List<ShortUrl>> GetAllAsync()
+    public async Task<List<ShortUrl>> GetAllAsync(int? userId = null)
     {
-        return await _db.ShortUrls.OrderByDescending(u => u.CreatedAt).ToListAsync();
+        if (userId.HasValue)
+            return await _db.ShortUrls
+                .Where(u => u.UserId == userId)
+                .OrderByDescending(u => u.CreatedAt)
+                .ToListAsync();
+
+        return await _db.ShortUrls
+            .Where(u => u.UserId == null)
+            .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
     }
 }

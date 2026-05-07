@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using UrlShortener.Services;
 
 namespace UrlShortener.Controllers;
@@ -19,19 +20,30 @@ public class UrlController : ControllerBase
     {
         try
         {
-            var result = await _service.CreateShortUrlAsync(originalUrl);
+            // Get userId if logged in
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? userId = userIdClaim != null ? int.Parse(userIdClaim) : null;
+
+            var result = await _service.CreateShortUrlAsync(originalUrl, userId);
             return Ok(result);
         }
         catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var urls = await _service.GetAllAsync();
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        int? userId = userIdClaim != null ? int.Parse(userIdClaim) : null;
+
+        var urls = await _service.GetAllAsync(userId);
         return Ok(urls);
     }
 }
